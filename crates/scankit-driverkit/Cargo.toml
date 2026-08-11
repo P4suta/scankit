@@ -1,0 +1,25 @@
+# SPDX-FileCopyrightText: 2026 scankit contributors
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
+[package]
+name = "scankit-driverkit"
+description = "Device bring-up and cassette-capture tool for the scankit scanner stack"
+# A developer tool for this repository's own interoperability work; never published.
+publish = false
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+# The binary is `scandev`, distinct from every lib crate name for the same
+# `target/doc/<name>` reason `skan` is. `just bin-name` enforces it (docs/adr/0015).
+[[bin]]
+name = "scandev"
+path = "src/main.rs"
+
+[lints]
+workspace = true

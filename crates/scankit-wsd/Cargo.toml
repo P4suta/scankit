@@ -1,0 +1,20 @@
+# SPDX-FileCopyrightText: 2026 scankit contributors
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
+[package]
+name = "scankit-wsd"
+description = "Sans-I/O WS-Scan SOAP model and WS-Discovery codec for the scankit scanner stack"
+keywords = ["scanner", "wsd", "ws-scan", "soap", "driverless"]
+categories = ["hardware-support", "parser-implementations"]
+readme = "../../README.md"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[lints]
+workspace = true

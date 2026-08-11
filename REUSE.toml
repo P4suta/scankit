@@ -1,0 +1,21 @@
+# SPDX-FileCopyrightText: 2026 scankit contributors
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
+# Licensing for files that cannot carry an inline SPDX header.
+#
+# Every source and config file in this repository starts with the three-line header
+# instead; this file covers only the rest. `just reuse` checks both.
+#
+# Note what is deliberately absent: there is no blanket annotation over recorded device
+# traffic. When cassettes land (docs/adr/0011), each recording gets its own annotation
+# recording which device produced it and under what terms it is shared, because a
+# capability document a vendor's firmware produced is not this project's creative work
+# to claim.
+version = 1
+
+[[annotations]]
+path = ["**/*.md", "Cargo.lock", ".gitignore", ".github/CODEOWNERS"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 scankit contributors"
+SPDX-License-Identifier = "MIT OR Apache-2.0"

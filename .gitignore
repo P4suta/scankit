@@ -1,0 +1,28 @@
+# Rust build output
+/target
+**/*.rs.bk
+*.pdb
+*.tmp
+# Cargo.lock is committed: the exact dependency graph is part of the reproducible build,
+# and the dependency-count measurements in docs/M0-ground-truth.md are only meaningful
+# against a recoverable graph.
+
+# cargo-fuzz build output. `fuzz/` will be its own workspace (the root manifest already
+# excludes it) with its own .gitignore; these root-anchored entries keep `reuse lint`
+# (which reads this file) in agreement with git about what is generated. Curated
+# `fuzz/corpus/` seeds are committed.
+/fuzz/target/
+/fuzz/artifacts/
+/fuzz/coverage/
+
+# mise local overrides (per-developer, never committed)
+/mise.local.toml
+/.mise.local.toml
+
+# Editor / OS
+/.idea/
+/.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+.claude/

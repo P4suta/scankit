@@ -1,0 +1,67 @@
+# SPDX-FileCopyrightText: 2026 scankit contributors
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
+[workspace]
+resolver = "3"
+members = [
+  "crates/scankit-core",
+  "crates/scankit-testkit",
+  "crates/scankit-escl",
+  "crates/scankit-wsd",
+  "crates/scankit-http",
+  "crates/scankit-discover",
+  "crates/scankit-backend-escl",
+  "crates/scankit-backend-wsd",
+  "crates/scankit-backend-virtual",
+  "crates/scankit",
+  "crates/scankit-cli",
+  "crates/scankit-driverkit",
+  "xtask",
+]
+# cargo-fuzz requires nightly and a sanitizer runtime.
+exclude = ["fuzz"]
+
+[workspace.package]
+version = "0.0.0"
+edition = "2024"
+# Floor imposed by edition 2024.
+rust-version = "1.85"
+license = "MIT OR Apache-2.0"
+authors = ["Yasunobu Sakashita <crates.tank733@slmails.com>"]
+repository = "https://github.com/P4suta/scankit"
+homepage = "https://github.com/P4suta/scankit"
+
+# Inter-crate dependencies are declared as each crate's code starts needing them, so
+# `cargo shear` stays meaningful. The intended graph is in ARCHITECTURE.md and is
+# enforced by the ALLOWED matrix in xtask/src/deps.rs.
+
+[workspace.lints.clippy]
+pedantic = { level = "warn", priority = -1 }
+# Production code must not use unwrap, expect, panic, or unreachable fallbacks.
+unwrap_used = "warn"
+expect_used = "warn"
+panic = "warn"
+unreachable = "warn"
+# Byte counts, page counts, and buffer sizes come from capability XML and job status
+# documents a scanner sent over the network. Arithmetic on those numbers must state what
+# it does on overflow.
+arithmetic_side_effects = "warn"
+# Index and slice panics are the classic parser vulnerability, and the protocol cores
+# parse XML, SOAP, and datagrams a device authored.
+indexing_slicing = "warn"
+missing_errors_doc = "allow"
+
+[workspace.lints.rust]
+missing_docs = "warn"
+missing_debug_implementations = "warn"
+unreachable_pub = "warn"
+# There is deliberately no workspace-wide forbid(unsafe_code): the unsafe policy is owned
+# by the `unsafe-boundary` gate in xtask, which confines the token to an allowlisted
+# module set (empty today) and demands a SAFETY comment on every block. This lint closes
+# the remaining hole: an `unsafe fn` body gets no implicit unsafe block.
+unsafe_op_in_unsafe_fn = "deny"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1

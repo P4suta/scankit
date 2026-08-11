@@ -1,0 +1,19 @@
+# Default owner for everything.
+* @P4suta
+
+# Architecture-affecting files require extra scrutiny.
+/Cargo.toml @P4suta
+/Cargo.lock @P4suta
+/rust-toolchain.toml @P4suta
+/.github/ @P4suta
+
+# The frozen decisions. A change here changes what the library is allowed to be.
+/docs/adr/ @P4suta
+/ARCHITECTURE.md @P4suta
+
+# The shared vocabulary. Every crate in the stack speaks these types, so a change here
+# is a change to all of them.
+/crates/scankit-core/ @P4suta
+
+# The gates that keep the graph frozen, the cores sans-I/O, and unsafe out.
+/xtask/ @P4suta

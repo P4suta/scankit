@@ -1,0 +1,23 @@
+# SPDX-FileCopyrightText: 2026 scankit contributors
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
+[package]
+name = "scankit-core"
+description = "Shared vocabulary for the scankit scanner stack: traits, tickets, capabilities, errors"
+keywords = ["scanner", "escl", "wsd", "sane", "driverless"]
+categories = ["hardware-support", "api-bindings"]
+readme = "../../README.md"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+# Deliberately empty, and gated: `just deps` holds this crate to a zero-dependency row
+# and `just purity` rejects any third-party entry in any table.
+
+[lints]
+workspace = true

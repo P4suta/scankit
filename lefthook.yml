@@ -1,0 +1,100 @@
+# SPDX-FileCopyrightText: 2026 scankit contributors
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
+# Install with `mise run hooks`.
+#
+# Every command runs through `mise exec --` so a hook uses the versions pinned in
+# mise.toml rather than whatever is on PATH.
+
+min_version: 2.1.9
+assert_lefthook_installed: true
+no_tty: false
+colors: true
+
+commit-msg:
+  commands:
+    conventional:
+      run: mise exec -- committed --commit-file {1}
+
+pre-commit:
+  parallel: false
+  follow: true
+  commands:
+    cargo-fmt:
+      tags: format
+      glob: "*.rs"
+      run: mise exec -- just fmt
+      stage_fixed: true
+
+    taplo-fmt:
+      tags: format
+      glob: "*.toml"
+      run: mise exec -- taplo fmt
+      stage_fixed: true
+
+    # `--force-exclude` keeps the excludes in typos.toml authoritative even when
+    # lefthook passes an excluded file (such as CHANGELOG.md) explicitly.
+    typos:
+      tags: spell
+      run: mise exec -- typos --force-exclude --write-changes {staged_files}
+      stage_fixed: true
+
+    clippy:
+      tags: lint
+      glob: "*.rs"
+      run: mise exec -- just lint
+      fail_text: "Clippy failed; fix every warning before committing."
+
+    deps:
+      tags: lint
+      glob: "**/Cargo.toml"
+      run: mise exec -- just deps
+      fail_text: "An inter-crate edge left the frozen graph (ARCHITECTURE.md)."
+
+    purity:
+      tags: lint
+      glob: "{**/Cargo.toml,**/*.rs}"
+      run: mise exec -- just purity
+      fail_text: "A sans-I/O crate gained a socket, a clock, or a third party (docs/adr/0003)."
+
+    placeholder:
+      tags: lint
+      glob: "**/*.rs"
+      run: mise exec -- just placeholder
+      fail_text: "An unwritten body or a suppressed lint reached the product crates (CONTRIBUTING.md)."
+
+    unsafe-boundary:
+      tags: lint
+      glob: "**/*.rs"
+      run: mise exec -- just unsafe-boundary
+      fail_text: "`unsafe` appeared outside the allowlisted boundary (docs/adr/0014)."
+
+    bin-name:
+      tags: lint
+      glob: "**/Cargo.toml"
+      run: mise exec -- just bin-name
+      fail_text: "A bin target shares a name with a lib crate (docs/adr/0015)."
+
+    reuse:
+      tags: license
+      glob: "{**/*.rs,**/*.toml,**/*.md,**/*.yml,Justfile,REUSE.toml,LICENSES/*}"
+      run: mise exec -- just reuse
+
+pre-push:
+  parallel: false
+  follow: true
+  commands:
+    local-ci:
+      tags: ci
+      run: mise exec -- just ci
+      fail_text: "Local CI failed; fix the reported gate before pushing."
+
+# Explicit manual entry point: `lefthook run local-ci`.
+local-ci:
+  parallel: false
+  follow: true
+  commands:
+    all:
+      tags: ci
+      run: mise exec -- just ci

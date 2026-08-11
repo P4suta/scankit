@@ -1,0 +1,20 @@
+# SPDX-FileCopyrightText: 2026 scankit contributors
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
+blank_issues_enabled: false
+contact_links:
+  - name: Mopria eSCL specification
+    url: https://mopria.org/spec-download
+    about: The eSCL specification (click-through license). It decides eSCL disagreements.
+  - name: Microsoft WSD scan service reference
+    url: https://learn.microsoft.com/en-us/windows-hardware/drivers/image/web-services-on-devices-reference
+    about: The surviving hub for the WS-Scan documentation. Archive pages before relying on them.
+  - name: sane-airscan
+    url: https://github.com/alexpevzner/sane-airscan
+    about: The behavior oracle for device quirks (docs/adr/0012). Check its device list first.
+  - name: Security vulnerability
+    url: https://github.com/P4suta/scankit/security/advisories/new
+    about: >-
+      Report privately instead of opening an issue. A panic, a hang, or an unbounded
+      allocation on any network input belongs here.

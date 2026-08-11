@@ -1,0 +1,27 @@
+# SPDX-FileCopyrightText: 2026 scankit contributors
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
+[package]
+name = "scankit-cli"
+description = "Command-line scanning tool for the scankit scanner stack"
+keywords = ["scanner", "escl", "wsd", "cli", "driverless"]
+categories = ["command-line-utilities", "hardware-support"]
+readme = "../../README.md"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+# The facade crate is `scankit` and this binary is `skan`. A bin target must never share
+# a name with any lib crate: parallel rustdoc fights over `target/doc/<name>` and
+# `cargo doc` dies. `just bin-name` enforces it (docs/adr/0015).
+[[bin]]
+name = "skan"
+path = "src/main.rs"
+
+[lints]
+workspace = true

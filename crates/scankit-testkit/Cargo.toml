@@ -1,0 +1,20 @@
+# SPDX-FileCopyrightText: 2026 scankit contributors
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
+[package]
+name = "scankit-testkit"
+description = "Dev-only test harness for the scankit workspace: executor, scripted HTTP, cassettes"
+# Dev-only: this crate is a dev-dependency and nothing else, and it is never published.
+# `just deps` (rule R5) rejects it in any normal dependency table.
+publish = false
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[lints]
+workspace = true

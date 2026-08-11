@@ -1,0 +1,68 @@
+# SPDX-FileCopyrightText: 2026 scankit contributors
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
+name: Scanner interoperability report
+description: A scanner this stack cannot discover, cannot drive, or drives incorrectly
+labels: ["interop"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this when a real device does not behave as this stack expects. Device quirks
+        are the substance of this problem domain, not noise: sane-airscan carries years
+        of them, and every fix here is pinned to recorded traffic (docs/adr/0011).
+
+        **A capture is worth more than any description.** `scandev` records
+        request/reply cassettes once it exists; until then, the raw capability document
+        (eSCL `ScannerCapabilities` XML or WS-Scan `GetScannerElements` reply) plus what
+        happened is the most useful pair.
+
+  - type: input
+    id: device
+    attributes:
+      label: Device
+      description: Vendor, model, and firmware version if the web UI shows one.
+      placeholder: "Brother MFC-L2750DW, firmware R2402"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: protocol
+    attributes:
+      label: Protocol in use
+      options:
+        - eSCL (HTTP)
+        - eSCL (HTTPS)
+        - WSD
+        - discovery only (mDNS / WS-Discovery)
+        - not sure
+    validations:
+      required: true
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: The command or call, the error or wrong behavior, and at which step.
+      render: text
+    validations:
+      required: true
+
+  - type: textarea
+    id: capabilities
+    attributes:
+      label: Capability document
+      description: >-
+        The raw XML the device serves (for eSCL, GET /eSCL/ScannerCapabilities). Attach
+        as a file if large.
+      render: xml
+
+  - type: textarea
+    id: oracle
+    attributes:
+      label: Behavior under sane-airscan or another stack
+      description: >-
+        Does sane-airscan, Windows, or macOS drive this device correctly? Its device
+        list or debug log is exactly what is wanted here (docs/adr/0012).
+      render: text

@@ -1,0 +1,94 @@
+# SPDX-FileCopyrightText: 2026 scankit contributors
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
+# Release configuration. Nothing here publishes automatically: the workspace is at 0.0.0
+# and the first published version should be a decision, not a side effect of merging.
+# That decision is also where the crates.io naming question is settled — the name
+# `scankit` is occupied by an unrelated crate (docs/M0-ground-truth.md, docs/adr/0015) —
+# and a question like that is not something a merge should answer on its own.
+#
+# The crates move as one version group. The facade is the only crate that tags and
+# releases, and its changelog covers the rest.
+
+[workspace]
+dependencies_update = false
+release_always = false
+# Stated rather than merely absent: no automation publishes to crates.io. There is no
+# release workflow either, so today this changes nothing — it is here so that adding one
+# does not make publishing a side effect of the addition.
+publish = false
+# Pre-1.0 the public surface is still being discovered. A future release phase must choose
+# and document its own compatibility policy rather than silently freezing this.
+semver_check = false
+git_tag_enable = false
+git_release_enable = false
+changelog_update = false
+
+[[package]]
+name = "scankit-core"
+version_group = "scankit"
+
+[[package]]
+name = "scankit-testkit"
+version_group = "scankit"
+
+[[package]]
+name = "scankit-escl"
+version_group = "scankit"
+
+[[package]]
+name = "scankit-wsd"
+version_group = "scankit"
+
+[[package]]
+name = "scankit-http"
+version_group = "scankit"
+
+[[package]]
+name = "scankit-discover"
+version_group = "scankit"
+
+[[package]]
+name = "scankit-backend-escl"
+version_group = "scankit"
+
+[[package]]
+name = "scankit-backend-wsd"
+version_group = "scankit"
+
+[[package]]
+name = "scankit-backend-virtual"
+version_group = "scankit"
+
+# The facade is the only crate that tags and releases, and its changelog covers the rest.
+[[package]]
+name = "scankit"
+version_group = "scankit"
+changelog_update = true
+changelog_path = "./CHANGELOG.md"
+changelog_include = [
+  "scankit-core",
+  "scankit-testkit",
+  "scankit-escl",
+  "scankit-wsd",
+  "scankit-http",
+  "scankit-discover",
+  "scankit-backend-escl",
+  "scankit-backend-wsd",
+  "scankit-backend-virtual",
+  "scankit-cli",
+  "scankit-driverkit",
+]
+git_tag_enable = true
+git_tag_name = "v{{ version }}"
+git_release_enable = true
+git_release_draft = true
+
+[[package]]
+name = "scankit-cli"
+version_group = "scankit"
+
+[[package]]
+name = "scankit-driverkit"
+version_group = "scankit"

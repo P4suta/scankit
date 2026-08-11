@@ -1,0 +1,20 @@
+# SPDX-FileCopyrightText: 2026 scankit contributors
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
+[package]
+name = "scankit-backend-wsd"
+description = "The WSD backend for the scankit scanner stack: drives the WS-Scan model over HTTP"
+keywords = ["scanner", "wsd", "ws-scan", "backend", "driverless"]
+categories = ["hardware-support"]
+readme = "../../README.md"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[lints]
+workspace = true

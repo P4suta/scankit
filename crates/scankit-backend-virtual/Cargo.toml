@@ -1,0 +1,20 @@
+# SPDX-FileCopyrightText: 2026 scankit contributors
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
+[package]
+name = "scankit-backend-virtual"
+description = "A scriptable virtual scanner backend for the scankit scanner stack"
+keywords = ["scanner", "testing", "virtual", "backend", "driverless"]
+categories = ["hardware-support", "development-tools::testing"]
+readme = "../../README.md"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[lints]
+workspace = true
