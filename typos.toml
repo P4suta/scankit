@@ -13,6 +13,11 @@
 
 [default]
 locale = "en-us"
+# Git commit identifiers, not words: docs/M0-ground-truth.md and ADR 0012 pin the
+# upstream revisions they measured (for example a SHA whose hex digits happen to spell
+# a flagged subtoken). Narrower than the CHANGELOG.md file exclusion below, and for the
+# same machine-generated reason; this is not a spelling allowance.
+extend-ignore-re = ["\\b[0-9a-f]{7,40}\\b"]
 
 [files]
 extend-exclude = [
