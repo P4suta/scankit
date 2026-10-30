@@ -552,10 +552,22 @@ mod tests {
 
     #[test]
     fn a_literal_naming_a_forbidden_construct_is_not_a_violation() {
-        assert!(constructs("const M: &str = \"todo!()\";").is_empty());
-        assert!(constructs("const M: &str = r#\"#[allow(x)] todo!()\"#;").is_empty());
-        assert!(constructs("const M: &str = \"a \\\" todo!() b\";").is_empty());
-        assert!(constructs("const M: &[u8] = br\"todo!()\";").is_empty());
+        assert_eq!(
+            constructs("const M: &str = \"todo!()\";"),
+            Vec::<&str>::new()
+        );
+        assert_eq!(
+            constructs("const M: &str = r#\"#[allow(x)] todo!()\"#;"),
+            Vec::<&str>::new()
+        );
+        assert_eq!(
+            constructs("const M: &str = \"a \\\" todo!() b\";"),
+            Vec::<&str>::new()
+        );
+        assert_eq!(
+            constructs("const M: &[u8] = br\"todo!()\";"),
+            Vec::<&str>::new()
+        );
     }
 
     #[test]
@@ -571,7 +583,7 @@ mod tests {
         let code = without_prose(source);
         assert_eq!(code.len(), source.len(), "blanked, not removed: {code:?}");
         assert!(!code.contains("todo"), "{code:?}");
-        assert!(constructs(source).is_empty());
+        assert_eq!(constructs(source), Vec::<&str>::new());
     }
 
     #[test]
@@ -666,9 +678,9 @@ mod tests {
 
     #[test]
     fn a_comparison_is_not_a_macro_call() {
-        assert!(constructs("if todo != 0 {}").is_empty());
-        assert!(constructs("if todo!= 0 {}").is_empty());
-        assert!(constructs("let flag = !todo;").is_empty());
+        assert_eq!(constructs("if todo != 0 {}"), Vec::<&str>::new());
+        assert_eq!(constructs("if todo!= 0 {}"), Vec::<&str>::new());
+        assert_eq!(constructs("let flag = !todo;"), Vec::<&str>::new());
     }
 
     #[test]
