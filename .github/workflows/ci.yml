@@ -71,7 +71,7 @@ jobs:
             cargo-hack@0.6.45,cargo-msrv@0.19.3,cargo-deny@0.20.2,
             cargo-shear@1.13.3,zizmor@1.28.0
       - uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
-      - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+      - uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
         with:
           version: 0.11.32
       - name: install verified actionlint
