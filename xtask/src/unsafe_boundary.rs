@@ -193,7 +193,7 @@ mod tests {
     #[test]
     fn prose_and_strings_naming_unsafe_are_not_violations() {
         let text = "// unsafe is forbidden here\nconst NOTE: &str = \"unsafe\";\n";
-        assert!(check_outside_boundary("x.rs", text).is_empty());
+        assert_eq!(check_outside_boundary("x.rs", text), Vec::<String>::new());
     }
 
     #[test]
@@ -218,7 +218,7 @@ mod tests {
             "    unsafe { call() }\n",
             "}\n"
         );
-        assert!(check_inside_boundary("sys.rs", text).is_empty());
+        assert_eq!(check_inside_boundary("sys.rs", text), Vec::<String>::new());
     }
 
     #[test]

@@ -147,7 +147,10 @@ mod tests {
             "name = \"decoy\"\n",
         );
         assert_eq!(explicit_bin_names(manifest), ["skan"]);
-        assert!(explicit_bin_names("[package]\nname = \"x\"\n").is_empty());
+        assert_eq!(
+            explicit_bin_names("[package]\nname = \"x\"\n"),
+            Vec::<String>::new()
+        );
     }
 
     #[test]
