@@ -562,8 +562,11 @@ mod tests {
 
     #[test]
     fn an_empty_manifest_declares_nothing() {
-        assert!(declared_dependencies("").is_empty());
-        assert!(declared_dependencies("[dependencies]\n").is_empty());
+        assert_eq!(declared_dependencies(""), Vec::<super::Declared>::new());
+        assert_eq!(
+            declared_dependencies("[dependencies]\n"),
+            Vec::<super::Declared>::new()
+        );
     }
 
     #[test]
