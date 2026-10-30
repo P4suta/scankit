@@ -1,0 +1,24 @@
+# SPDX-FileCopyrightText: 2026 scankit contributors
+#
+# SPDX-License-Identifier: MIT OR Apache-2.0
+
+name = "scankit"
+summary = "An early stage Rust workspace for eSCL and Web Services on Devices (WSD) scanner support"
+install = """
+git clone https://github.com/P4suta/scankit.git
+cd scankit
+mise install
+"""
+usage = "just --list"
+usage_language = "sh"
+documentation_index = true
+copyright = "2026 scankit contributors"
+license = "MIT OR Apache-2.0"
+
+[preserved_licenses]
+mit_sha256 = "B05785F9F18E6716BAB63424B11454513B9943A222595B70411009202FC592B5"
+apache_sha256 = "074E6E32C86A4C0EF8B3ED25B721CA23ACA83DF277CD88106EF7177C354615FF"
+
+[[consent]]
+contributor = "Yasunobu"
+evidence = "https://github.com/P4suta/scankit/commit/71726f18c85b75ce3fab3599eca212e497ced388"
