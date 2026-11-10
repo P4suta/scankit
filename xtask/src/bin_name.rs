@@ -16,7 +16,7 @@
 //! 1. **No collision.** Every bin target name — explicit `[[bin]]` or implicit
 //!    `src/main.rs` — is compared against every package name that has a library
 //!    target.
-//! 2. **The frozen names.** `docs/adr/0015` names the two commands; [`EXPECTED`]
+//! 2. **The frozen name.** `docs/adr/0015` names the command; [`EXPECTED`]
 //!    transcribes it, so renaming a binary is an ADR edit, not a drive-by.
 
 use std::fs;
@@ -34,7 +34,7 @@ pub(crate) const GATE: Gate = Gate {
 };
 
 /// The bin names `docs/adr/0015` freezes, per owning crate.
-const EXPECTED: &[(&str, &str)] = &[("scankit-cli", "skan"), ("scankit-driverkit", "scandev")];
+const EXPECTED: &[(&str, &str)] = &[("scan-kit", "skan")];
 
 /// One binary target, attributed to the member that declares it.
 #[derive(Debug)]
@@ -57,7 +57,7 @@ fn run() -> io::Result<Vec<String>> {
         let explicit = explicit_bin_names(&manifest);
         let has_main = member.directory.join("src").join("main.rs").is_file();
         if member.directory.join("src").join("lib.rs").is_file() {
-            lib_names.push(member.name.clone());
+            lib_names.push(explicit_lib_name(&manifest).unwrap_or_else(|| member.name.clone()));
         }
         if explicit.is_empty() && has_main {
             // Cargo's implicit bin target takes the package name.
@@ -131,15 +131,39 @@ fn explicit_bin_names(manifest: &str) -> Vec<String> {
     names
 }
 
+/// The explicit `[lib]` target name, when a package separates it from its crates.io publication name.
+fn explicit_lib_name(manifest: &str) -> Option<String> {
+    let mut inside_lib = false;
+    for line in manifest.lines() {
+        let line = shared::before_comment(line).trim();
+        if line.is_empty() {
+            continue;
+        }
+        if line.starts_with('[') {
+            inside_lib = line == "[lib]";
+            continue;
+        }
+        if inside_lib {
+            let (key, value) = line.split_once('=')?;
+            if key.trim() == "name" {
+                return shared::quoted_values(value)
+                    .first()
+                    .map(|name| (*name).to_owned());
+            }
+        }
+    }
+    None
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{EXPECTED, explicit_bin_names, run};
+    use super::{EXPECTED, explicit_bin_names, explicit_lib_name, run};
 
     #[test]
     fn reads_bin_names_and_only_bin_names() {
         let manifest = concat!(
             "[package]\n",
-            "name = \"scankit-cli\"\n",
+            "name = \"scan-kit\"\n",
             "[[bin]]\n",
             "name = \"skan\"\n",
             "path = \"src/main.rs\"\n",
@@ -151,6 +175,12 @@ mod tests {
             explicit_bin_names("[package]\nname = \"x\"\n"),
             Vec::<String>::new()
         );
+    }
+
+    #[test]
+    fn reads_a_library_name_distinct_from_the_package() {
+        let manifest = "[package]\nname = \"scan-kit\"\n[lib]\nname = \"scankit\"\n";
+        assert_eq!(explicit_lib_name(manifest), Some("scankit".to_owned()));
     }
 
     #[test]

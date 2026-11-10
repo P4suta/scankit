@@ -5,10 +5,8 @@
 # `just --list` shows only the comment line directly above a recipe, so rationale goes in
 # a block above a blank line and the line touching the recipe is its one-line summary.
 
-# NOTE: there is no `no-std` and no `wasm` recipe here on purpose: the pure crates are
-# `std` (I/O-free by the `purity` and `deps` gates, not by libc absence), so a bare-metal
-# or wasm lane would prove nothing this design claims. There is also no cargo-mutants
-# lane yet: mutation testing earns its cost once logic exists to mutate.
+# NOTE: there is no `no-std` or wasm recipe: the pure protocol modules use `std`, and
+# their I/O-freedom is a module dependency invariant checked by `purity`.
 
 set shell := ["sh", "-cu"]
 set windows-shell := ["powershell.exe", "-NoLogo", "-NoProfile", "-Command"]
@@ -60,11 +58,11 @@ doc:
 feature-matrix:
     cargo hack check --workspace --all-targets --each-feature
 
-# Reject any inter-crate edge the frozen ALLOWED matrix does not carry (ARCHITECTURE.md).
+# Freeze one product package plus xtask, with no workspace dependency edges.
 deps:
     cargo run --quiet -p xtask -- deps
 
-# Reject sockets, clocks, and third parties in the sans-I/O crates (docs/adr/0003).
+# Reject upper-layer, socket, clock, and I/O tokens in pure internal modules.
 purity:
     cargo run --quiet -p xtask -- purity
 
@@ -108,18 +106,7 @@ zizmor:
 
 # Verify every workspace crate at the shared declared MSRV.
 msrv:
-    cargo msrv verify --path crates/scankit-core
-    cargo msrv verify --path crates/scankit-testkit
-    cargo msrv verify --path crates/scankit-escl
-    cargo msrv verify --path crates/scankit-wsd
-    cargo msrv verify --path crates/scankit-http
-    cargo msrv verify --path crates/scankit-discover
-    cargo msrv verify --path crates/scankit-backend-escl
-    cargo msrv verify --path crates/scankit-backend-wsd
-    cargo msrv verify --path crates/scankit-backend-virtual
     cargo msrv verify --path crates/scankit
-    cargo msrv verify --path crates/scankit-cli
-    cargo msrv verify --path crates/scankit-driverkit
     cargo msrv verify --path xtask
 
 # Fast deterministic checks used during the edit/commit loop.

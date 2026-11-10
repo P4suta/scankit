@@ -2,34 +2,50 @@
 //
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
-//! Scan a page from a network scanner in pure Rust. This is the crate to depend on.
+//! A small, synchronous, driverless scanner library.
 //!
-//! scankit is a driverless-first scanner stack: eSCL and WSD, discovered over
-//! mDNS/DNS-SD and WS-Discovery, spoken over HTTP with an explicit TLS trust policy.
-//! The product is the Rust API itself — this is not a SANE clone and exposes no C ABI
-//! (`docs/adr/0001`, `docs/adr/0002`). This facade will hold, and nothing else will
-//! hold:
+//! The public API deliberately contains scanner-domain values only.
+//! eSCL, WSD,
+//! discovery, HTTP, and TLS are private implementation details, so applications do not inherit their versioning or architecture.
 //!
-//! - The re-exported vocabulary of `scankit-core`, so one dependency line is enough.
-//! - The `Composite` backend: eSCL, WSD, and the virtual device behind one uniform
-//!   `Backend` surface, with eSCL preferred where a device offers both.
-//! - The one-call API: discover, pick, validate the ticket, scan, deliver pages — the
-//!   ten lines every application would otherwise write, written once.
+//! # Quick start
 //!
-//! Pages are delivered as the device produced them: bytes plus a declared format,
-//! never decoded, never re-encoded (`docs/adr/0007`).
+//! ```no_run
+//! use std::{fs::File, io, time::Duration};
 //!
-//! # Invariants
+//! # fn main() -> Result<(), Box<dyn std::error::Error>> {
+//! let Some(device) = scankit::discover(Duration::from_secs(3))?
+//!     .into_iter()
+//!     .next()
+//! else {
+//!     return Ok(());
+//! };
 //!
-//! - This crate composes; it implements no protocol and owns no socket. Grammar
-//!   belongs to the protocol crates, sockets to the leaves, time to the pumps.
-//! - Release-wise this crate is the family's changelog carrier: the version and
-//!   CHANGELOG.md move here, for every crate at once (release-plz.toml).
+//! let mut scanner = device.connect()?;
+//! let mut scan = scanner.scan()?;
 //!
-//! # Status
-//!
-//! Frozen at bootstrap: the shapes above are the day-one design, recorded in
-//! `docs/adr/` before any of them is implemented. No code exists yet. Note that the
-//! crates.io name `scankit` is occupied by an unrelated project
-//! (`docs/M0-ground-truth.md`); the publication name is decided at first release,
-//! the API and this workspace name are not hostage to it (`docs/adr/0015`).
+//! while let Some(mut page) = scan.next_page()? {
+//!     let extension = page.suggested_extension().unwrap_or("bin");
+//!     let mut output = File::create(format!(
+//!         "scan-{number:03}.{extension}",
+//!         number = page.number(),
+//!     ))?;
+//!     io::copy(&mut page, &mut output)?;
+//! }
+//! # Ok(())
+//! # }
+//! ```
+
+mod api;
+mod driver;
+mod error;
+mod model;
+mod protocol;
+mod transport;
+mod wire;
+
+pub use api::{ConnectOptions, Device, Page, Scan, Scanner, discover};
+pub use error::{Error, ErrorKind, Fingerprint, Intervention, Result};
+pub use model::{
+    Capabilities, ColorMode, Region, Resolution, ScanOptions, ScanPlan, Sides, Source,
+};
