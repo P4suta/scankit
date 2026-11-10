@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MIT OR Apache-2.0
 
 [package]
-name = "scankit"
+name = "scan-kit"
 description = "A driverless (eSCL/WSD) scanner stack in pure Rust: discovery, capabilities, scanning"
 keywords = ["scanner", "escl", "wsd", "sane", "driverless"]
 categories = ["hardware-support", "network-programming"]
@@ -15,6 +15,28 @@ license.workspace = true
 authors.workspace = true
 repository.workspace = true
 homepage.workspace = true
+
+[lib]
+name = "scankit"
+path = "src/lib.rs"
+
+[[bin]]
+name = "skan"
+path = "src/bin/skan.rs"
+
+[dependencies]
+mdns-sd = { version = "0.20.3", default-features = false }
+quick-xml = { version = "0.41.0", default-features = false }
+rustls = { version = "0.23.42", default-features = false, features = [
+  "ring",
+  "std",
+] }
+rustls-native-certs = "0.8.5"
+rustls-pki-types = "1.16.0"
+sha2 = "0.10.9"
+ureq = { version = "3.5.1", default-features = false, features = [
+  "rustls-no-provider",
+] }
 
 [lints]
 workspace = true

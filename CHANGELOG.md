@@ -9,10 +9,11 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
-- Workspace bootstrap: thirteen crate skeletons, the quality gates (`deps`, `purity`,
-  `placeholder`, `unsafe-boundary`, `bin-name` in `xtask`, plus the shared
-  format/lint/spell/license/supply-chain set), CI with a single `ci-required`
-  aggregation gate, and the day-one architectural decision records. Nothing scans yet.
+- The `scan-kit` product package with library target `scankit` and `skan` command.
+- Minimal synchronous discovery, connection, capability, scan-job, and streaming-page API with exact option resolution and opaque stable errors.
+- Private pure eSCL, WSD, WS-Discovery, and XML layers; HTTP/TLS, mDNS, and UDP transports; eSCL/WSD job drivers; streaming WSD multipart extraction.
+- Platform TLS verification, explicit SHA-256 leaf-certificate pinning, secure-endpoint preference without HTTP downgrade, bounded control replies, and disabled redirects.
+- Module-level architecture gates, strict parser/safety lints, protocol transcript tests, lifecycle tests, doctests, and the single-product-package workspace register.
+- ADR 0016, superseding the unpublished thirteen-crate bootstrap with private module boundaries and a deliberately narrow SemVer surface.
 - `docs/M0-ground-truth.md`: the M0 measurements — incumbent SLOC (sane-backends,
-  sane-airscan), dependency-tree costs of the candidate crates, crates.io name
-  availability, and specification URL liveness — that the frozen design cites.
+  sane-airscan), dependency-tree costs of the candidate crates, crates.io name availability, and specification URL liveness — that the frozen design cites.
