@@ -244,7 +244,7 @@ impl<Incoming: Transport> Connector<Incoming> for PinnedTlsConnector {
         let connection = ClientConnection::new(Arc::new(config), server_name)?;
         let stream = rustls::StreamOwned {
             conn: connection,
-            sock: TransportAdapter::new(transport.boxed()),
+            sock: TransportAdapter::new(transport.boxed(), details.current_time.clone()),
         };
         let buffers = LazyBuffers::new(
             details.config.input_buffer_size(),
