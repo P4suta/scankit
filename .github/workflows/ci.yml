@@ -64,16 +64,16 @@ jobs:
         run: |
           rustup toolchain install stable --profile minimal --component rustfmt --component clippy --no-self-update
           rustup default stable
-      - uses: taiki-e/install-action@18b1216eba7f8039b0f8d131d5473787f0edce68 # v2.85.3
+      - uses: taiki-e/install-action@ab49d3c64680143e184118bed66a46419fc15519 # v2.90.5
         with:
           tool: >-
             just@1.50.0,taplo-cli@0.10.0,typos@1.48.0,nextest@0.9.140,
             cargo-hack@0.6.45,cargo-msrv@0.19.3,cargo-deny@0.20.2,
             cargo-shear@1.13.3,zizmor@1.28.0
-      - uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
       - uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
         with:
-          version: 0.11.32
+          version: 0.13.8
       - name: install verified actionlint
         env:
           ACTIONLINT_VERSION: 1.7.12
@@ -121,10 +121,10 @@ jobs:
         run: |
           rustup toolchain install stable --profile minimal --no-self-update
           rustup default stable
-      - uses: taiki-e/install-action@18b1216eba7f8039b0f8d131d5473787f0edce68 # v2.85.3
+      - uses: taiki-e/install-action@ab49d3c64680143e184118bed66a46419fc15519 # v2.90.5
         with:
           tool: just@1.50.0,nextest@0.9.140
-      - uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
       # Scanning happens from desktops on all three operating systems, and the virtual
       # device makes the whole suite hardware-free. All three are first-class here, not
       # a courtesy (docs/adr/0011).
