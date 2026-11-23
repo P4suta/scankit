@@ -580,12 +580,12 @@ mod tests {
     fn the_workspace_is_readable_and_the_product_set_excludes_the_tooling() {
         let all = members().expect("the workspace manifest is readable");
         let names: Vec<&str> = all.iter().map(|member| member.name.as_str()).collect();
-        assert!(names.contains(&"scankit-core"), "found {names:?}");
-        assert!(names.contains(&"scankit"), "found {names:?}");
+        assert!(names.contains(&"scan-kit"), "found {names:?}");
         assert!(names.contains(&"xtask"), "found {names:?}");
 
         let product = product_crates().expect("the workspace manifest is readable");
         let names: Vec<&str> = product.iter().map(|member| member.name.as_str()).collect();
+        assert_eq!(names, ["scan-kit"]);
         assert!(!names.contains(&"xtask"), "xtask is not product code");
         for member in &product {
             assert!(

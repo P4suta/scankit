@@ -1,68 +1,33 @@
 # Roadmap
 
-Each milestone is independently verifiable, and none before M3 needs hardware: the
-virtual device and the scripted transport are the primary test ground
-([ADR 0011](docs/adr/0011-virtual-first-verification.md)).
+The architectural reset is complete: one product package, minimal synchronous public API, pure private protocol modules, real HTTP/TLS and discovery transports, eSCL/WSD job drivers, streaming pages, cancellation, and strict repository gates all compile and test together.
 
-## M0 — Measure (done)
+## Implemented foundation
 
-Ground truth before design: incumbent SLOC (sane-backends, sane-airscan), dependency
-cost of every candidate crate, crates.io namespace, and specification availability.
-Results: [docs/M0-ground-truth.md](docs/M0-ground-truth.md). The fifteen decision
-records in [docs/adr/](docs/adr/) cite these numbers rather than impressions.
+- canonical per-source capabilities and exact `ScanOptions` resolution;
+- eSCL capability, job creation, page retrieval, completion, status, and cancellation;
+- WSD scanner elements, job creation, streaming multipart retrieval, status, and cancellation;
+- mDNS for `_uscan`/`_uscans` plus WS-Discovery;
+- platform TLS verification and explicit SHA-256 certificate pinning;
+- one-job/one-page borrow discipline and opaque stable error classification;
+- `skan list`, `skan info`, and `skan scan` as a public-API-only client;
+- unit, protocol transcript, doctest, architecture, safety, and lint gates.
 
-## M1 — Vocabulary and the virtual device
+## Before 0.1
 
-`scankit-core` implemented in full: the traits, `ScanTicket`/`Capabilities` with the
-const-asserted flag registry, the error vocabulary, the exchange types.
-`scankit-backend-virtual` implements the traits against `Scenario` scripts, and the
-facade's `Composite` carries it. The ticket validator and `nearest()` land here with
-their mismatch table ([ADR 0010](docs/adr/0010-no-silent-negotiation.md)).
+1. Grow the internal transcript suite from diverse scanner captures, especially WSD dialects and eSCL status variations.
+2. Add deterministic loopback end-to-end fixtures for complete multi-page, feeder empty, jam, cancellation, timeout, oversized control body, and TLS pin mismatch.
+3. Confirm discovery and one-page scans against representative hardware.
+   Hardware is evidence and capture input, never a required CI dependency.
+4. Audit protocol behavior against pinned sane-airscan sources where specifications are ambiguous, recording each compatibility quirk beside its test.
+5. Run the API through small real consumers and remove anything that does not earn its SemVer cost before publishing 0.1.
 
-**Exit criterion:** `skan scan --backend virtual` produces a multi-page fixture from
-an ADF scenario script — several pages, correct order, correct declared formats — and
-the jam/cover-open/cancel scenarios surface as the right `Intervention` errors.
+## Release rule
 
-## M2 — eSCL against the mock
-
-`scankit-escl` in full: capabilities XML interpretation, `ScanSettings` generation,
-the job state machine. `scankit-http` (ureq + rustls + `TrustPolicy`) and
-`scankit-backend-escl` pump it. Verified against `ScriptedHttp` and the testkit's
-`std::net` mock server.
-
-**Exit criterion:** the complete eSCL job lifecycle — capabilities, create, poll,
-retrieve pages, completion, plus cancellation and every staged fault — runs green
-against the mock, offline, in `cargo test`.
-
-## M3 — Discovery and a real device
-
-`scankit-discover` (mDNS/DNS-SD for `_uscan._tcp`/`_uscans._tcp`, WS-Discovery over
-UDP with the codec from `scankit-wsd`), and `scandev` learns to capture cassettes.
-First confirmatory hardware runs, marked `HW-verified`, never in required CI.
-
-**Exit criterion:** `skan scan` discovers a scanner on a real LAN and lands one page
-from it; the session is captured as a cassette that replays green offline.
-
-## M4 — WSD
-
-`scankit-wsd`'s WS-Scan model in full and `scankit-backend-wsd` pumping it, against
-archived specification pages and cassettes; sane-airscan as the behavior oracle where
-the text has decayed ([ADR 0012](docs/adr/0012-sane-airscan-is-the-behavior-oracle.md)).
-
-**Exit criterion:** the WSD lifecycle runs green against scripted traffic, and a WSD
-device scans via `skan` where hardware is available (confirmatory).
-
-## M5 — Facade DevEx freeze and the 0.1 decision
-
-The one-call API polished against real consumers, documentation complete, the
-crates.io naming question closed ([ADR 0015](docs/adr/0015-naming.md)), and the
-decision whether the surface is ready to be called 0.1 — releasing remains a
-deliberate act, never automation ([ADR 0014](docs/adr/0014-workspace-register.md)).
+Version remains `0.0.0` and release automation remains inert until the public surface has survived those consumer exercises.
+A first release is a deliberate review of the root re-export list—not a milestone automatically triggered by implementation volume.
 
 ## Non-goals
 
-SANE API compatibility and a C ABI ([ADR 0002](docs/adr/0002-a-rust-api-not-a-sane-clone.md)),
-image decoding and processing ([ADR 0007](docs/adr/0007-bytes-not-images.md)), and
-USB-legacy or vendor-proprietary protocols
-([ADR 0001](docs/adr/0001-driverless-first-no-usb-legacy.md)) are out of scope — the
-first two permanently, the third for 1.0.
+SANE API compatibility, a C ABI, image decoding/processing, PDF assembly, USB legacy drivers, public backend injection, and vendor-proprietary protocols remain out of scope.
+New protocol support should stay private unless it introduces genuinely new scanner-domain concepts.

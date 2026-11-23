@@ -25,9 +25,7 @@ allow = [
   "Apache-2.0 WITH LLVM-exception",
   "BSD-3-Clause",
   "ISC",
-  "Unicode-3.0",
   "Unlicense",
-  "Zlib",
 ]
 
 [bans]
@@ -39,7 +37,10 @@ highlight = "all"
 workspace-default-features = "allow"
 external-default-features = "allow"
 deny = []
-skip = []
+# ring 0.17 still targets windows-sys 0.52 while the maintained networking and native certificate crates target 0.61.
+# Both are target bindings with no shared runtime state;
+# neither side can be unified without replacing the TLS crypto provider.
+skip = [{ name = "windows-sys", version = "0.52.0" }]
 skip-tree = []
 
 [sources]

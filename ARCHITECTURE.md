@@ -1,133 +1,123 @@
 # Architecture
 
-Invariants only. Reasoning lives in [`docs/adr/`](docs/adr/).
+This file records current invariants.
+The trade-off that produced this shape is [ADR 0016](docs/adr/0016-one-product-crate.md).
 
-## Shape
+## Product boundary
+
+The workspace contains exactly two packages:
 
 ```text
-        scankit-cli (skan)      scankit-driverkit (scandev)
-                 ▲                  ▲
-                 └────── scankit ───┘        ← facade: re-exports, Composite, one-call API
-             ▲          ▲          ▲       ▲
-  backend-escl  backend-wsd  backend-virtual  scankit-discover   ← pumps + discovery: own time and sockets' use
-      ▲    ▲       ▲    ▲          ▲               ▲
-  escl   http   wsd   http        core         wsd, core         ← sans-I/O cores + transport leaf
-      ▲            ▲                               
-     core         core                            
-                                            scankit-core          ← the shared vocabulary, depends on nothing
+scan-kit                         xtask
+├── lib: scankit                └── repository gates (not product code)
+└── bin: skan
 ```
 
-`scankit-driverkit` may additionally reach past the facade into the protocol and
-transport crates — the one consumer allowed to, because its job is bring-up. The
-`scankit-testkit` harness sits outside the shipped graph entirely: dev-only, reachable
-from every crate's tests except `scankit-core`'s (whose tests it would cycle with).
+Only `scan-kit` ships product code.
+Creating a crate for an implementation layer is an architecture change: crates.io packages create names, dependency choices, and SemVer surfaces that this library does not need.
 
-## Invariants
+The library root has private modules and individual public re-exports:
 
-1. **Driverless first; no USB legacy** ([ADR 0001](docs/adr/0001-driverless-first-no-usb-legacy.md)).
-   eSCL and WSD are the product. The core traits do not exclude a future USB backend
-   seat; nothing else about one exists.
+```text
+public facade: lib.rs
+        │
+        ▼
+api ───────────────► driver ───────────────► transport
+ │                      │                       │
+ │                      ▼                       │
+ └──────► model ◄── protocol ◄──── private wire values
+             ▲          │
+             └── error ◄┘
+```
 
-2. **A Rust API, not a SANE clone** ([ADR 0002](docs/adr/0002-a-rust-api-not-a-sane-clone.md)).
-   SANE API compatibility and a C ABI are permanent non-goals. sane-airscan is a
-   behavior reference, never an interface reference.
+Dependency direction is downward/rightward.
+In particular, `model`, `error`, `wire`,
+and `protocol` cannot name `api`, `driver`, or `transport`.
+Protocol code cannot name I/O traits, sockets, threads, or clocks.
+`just purity` checks those absences over the module tree; Cargo packages are not required to obtain the boundary.
 
-3. **The protocol cores are sans-I/O** ([ADR 0003](docs/adr/0003-sans-io-protocol-cores.md)).
-   `scankit-escl` and `scankit-wsd` hold state machines over value types; sockets live
-   in the two leaves, time lives in the pumps. `just deps` and `just purity` enforce it.
+## Public surface
 
-4. **Native `async fn`, static dispatch, no runtime** ([ADR 0004](docs/adr/0004-afit-static-dispatch-runtime-agnostic.md)).
-   No `dyn`, no executor dependency in the default path.
+The root exports domain vocabulary, not implementation mechanisms:
 
-5. **One job borrows the scanner** ([ADR 0005](docs/adr/0005-one-job-borrows-the-scanner.md)).
-   `&mut self` everywhere; `Job<'a>` pins the device. Dropping a job abandons it
-   lazily; `cancel(self)` is the guaranteed path.
+| Area | Exported names |
+| --- | --- |
+| Find/connect | `discover`, `Device`, `ConnectOptions`, `Scanner`, `Fingerprint` |
+| Job/stream | `Scan`, `Page`, `ScanOptions`, `ScanPlan` |
+| Capabilities | `Capabilities`, `Source`, `Sides`, `ColorMode`, `Resolution`, `Region` |
+| Failure | `Result`, opaque `Error`, `ErrorKind`, `Intervention` |
 
-6. **The error vocabulary is flat** ([ADR 0006](docs/adr/0006-flat-error-vocabulary.md)).
-   One closed `#[non_exhaustive]` enum, translated at boundaries, no source chains.
-   User-fixable failures are one `Intervention(InterventionReason)` class.
+There are no public protocol types, HTTP values, driver traits, async-runtime choices,
+backend enums, dependency re-exports, or feature flags.
+`unreachable_pub = "deny"` makes every implementation item either private or deliberately reachable from the root.
 
-7. **Bytes, not images** ([ADR 0007](docs/adr/0007-bytes-not-images.md)). A page is the
-   device's bytes plus its declared format. Decoding and PDF assembly are out of scope;
-   only the `scankit-image` seat is reserved.
+The API is synchronous because the selected transports and physical scanner lifecycle are synchronous.
+Applications that need asynchronous orchestration can place these blocking operations on their own blocking pool without scankit choosing an executor or multiplying its API.
 
-8. **HTTP is a leaf** ([ADR 0008](docs/adr/0008-http-client-is-a-leaf.md)). One crate
-   owns the client (plan: ureq v3 + rustls, thread-bridged); the exchange value types
-   make it replaceable.
+## Lifecycle invariants
 
-9. **TLS trust is explicit** ([ADR 0009](docs/adr/0009-tls-trust-is-explicit.md)).
-   `TrustPolicy` is `SystemRoots`, `TrustOnFirstUse`, or `Fingerprint`. No accept-all,
-   no permissive default.
+1. `Scanner::scan(&mut self)` returns `Scan<'_>`, so one scanner cannot carry two jobs.
+2. `Scan::next_page(&mut self)` returns `Page<'_>`, so no next-page or cancel operation can overlap an open stream.
+3. `Page` implements `std::io::Read`; bytes are never decoded or assembled.
+4. A page must reach EOF.
+   Dropping it early poisons that job except for cancellation.
+5. `Scan::cancel(self)` is explicit and fallible.
+   Dropping an unfinished scan stores the job for lazy cancellation before the next scan begins.
+6. Control responses are bounded; page bodies remain streaming and unbounded.
 
-10. **No silent negotiation** ([ADR 0010](docs/adr/0010-no-silent-negotiation.md)).
-    A ticket the device cannot honor is a structured error; rounding happens only in an
-    explicit `nearest()` call.
+## Capability policy
 
-11. **Virtual first, hardware confirmatory** ([ADR 0011](docs/adr/0011-virtual-first-verification.md)).
-    The virtual backend, `ScriptedHttp`, and cassettes are the primary verification
-    ground; hardware runs are marked and never required in CI.
+Capabilities are normalized per physical source.
+An explicit option is an exact constraint and is never rounded.
+Omitted settings resolve deterministically:
 
-12. **sane-airscan is the behavior oracle** ([ADR 0012](docs/adr/0012-sane-airscan-is-the-behavior-oracle.md)).
-    Quirk decisions cite it with a pinned source; deviating from it requires an ADR
-    appendix.
+1. flatbed, then feeder;
+2. one-sided;
+3. color, then grayscale, then monochrome;
+4. exactly 300 dpi, otherwise the greatest resolution not above 300 dpi, otherwise the smallest advertised resolution;
+5. JPEG, then PDF, then the lexicographically first advertised MIME type;
+6. the source's maximum region.
 
-13. **Capabilities are flags plus tables** ([ADR 0013](docs/adr/0013-capabilities-are-flags-plus-tables.md)).
-    Hand-rolled bit flags with a const-asserted registry, and per-input-source tables.
+The exact choices are returned as `ScanPlan` before the protocol request is rendered.
 
-14. **The workspace register is frozen** ([ADR 0014](docs/adr/0014-workspace-register.md)).
-    Edition 2024, rust-version 1.85, resolver 3, version 0.0.0, release automation all
-    off, and the gate set below.
+## Protocol and transport boundary
 
-15. **Names are frozen** ([ADR 0015](docs/adr/0015-naming.md)). Facade `scankit`,
-    family prefix `scankit-*`, binaries `skan` and `scandev`. `just bin-name` enforces
-    the no-collision rule.
+`protocol::{escl,wsd,ws_discovery,xml}` parses bytes and renders private `HttpCall` values.
+It owns no client, socket, timeout, retry, TLS, or discovery loop.
+Synthetic request/reply tests therefore exercise protocol decisions without a network.
 
-## What is gated
+`transport::http` owns ureq, rustls, limits, and TLS identity.
+`transport::discovery` owns mDNS and the WS-Discovery UDP socket.
+`driver` is the only layer that combines a protocol with HTTP and translates private replies into canonical pages/errors.
 
-| Gate | Enforces | Runs |
-| --- | --- | --- |
-| `just deps` | every inter-crate edge is in the frozen ALLOWED matrix | offline, pre-commit |
-| `just purity` | no socket, clock, or third party in the sans-I/O crates | offline, pre-commit |
-| `just placeholder` | no `todo!`/`unimplemented!` body, no `allow`/`expect` | offline, pre-commit |
-| `just unsafe-boundary` | no `unsafe` outside the (empty) allowlist | offline, pre-commit |
-| `just bin-name` | no bin target shares a lib crate's name | offline, pre-commit |
+WSD multipart image responses are peeled as a streaming reader: the SOAP control part is bounded, the binary part is not buffered, and its trailing MIME boundary is never leaked into page bytes.
 
-Invariants 5, 6, 7, and 10 have no dedicated gate. Invariant 5 is enforced by the
-borrow checker at every call site; 6, 7, and 10 rest on the frozen API shape, review,
-and the M1/M2 test suites. Invariant 13's registry consistency is a `const` assertion,
-which is a gate the compiler runs.
+## Discovery and trust
 
-## Crate boundaries
+- mDNS browses `_uscan._tcp.local.` and `_uscans._tcp.local.`.
+- WS-Discovery probes the IPv4 link-local multicast address and parses advertised scanner endpoints.
+- Exact advertised identities merge endpoints; protocols never appear publicly.
+- Secure endpoints sort first.
+  If any HTTPS endpoint is advertised for a merged device, HTTP candidates are excluded rather than used as a downgrade.
+- HTTPS uses platform verification by default.
+  Explicit pinning compares the SHA-256 leaf fingerprint for every request.
+  A mismatch is `UntrustedPeer`.
+- Redirects are disabled, keeping authority changes explicit.
 
-| Crate | May depend on (direct intent) | Role |
-| --- | --- | --- |
-| `scankit-core` | — | vocabulary: traits, tickets, capabilities, errors, exchange types |
-| `scankit-testkit` | `scankit-core` | dev-only harness: executor, `ScriptedHttp`, cassettes |
-| `scankit-escl` | `scankit-core` | sans-I/O eSCL state machine |
-| `scankit-wsd` | `scankit-core` | sans-I/O WS-Scan model + WS-Discovery codec |
-| `scankit-http` | `scankit-core` | HTTP + TLS transport leaf, `TrustPolicy` |
-| `scankit-discover` | `scankit-core`, `scankit-wsd` | mDNS/DNS-SD + WS-Discovery sockets |
-| `scankit-backend-escl` | core, escl, http | the eSCL pump: retries, timeouts, polling |
-| `scankit-backend-wsd` | core, wsd, http | the WSD pump |
-| `scankit-backend-virtual` | `scankit-core` | scripted virtual device |
-| `scankit` | core, discover, backends | facade: Composite, one-call API |
-| `scankit-cli` | `scankit` | the `skan` command |
-| `scankit-driverkit` | scankit, escl, wsd, http, discover | the `scandev` bring-up tool |
-| `xtask` | — | the gates |
+## Mechanical gates
 
-The table above records *direct intent*; the ALLOWED matrix in `xtask/src/deps.rs` is
-its transitive closure and is what the `deps` gate checks manifests against. The two
-absent edges everything leans on: neither protocol core reaches `scankit-http`, and
-neither reaches the other.
+| Gate | Invariant |
+| --- | --- |
+| Rust privacy + `unreachable_pub` | implementation modules do not become API |
+| `deps` | exactly one product package plus `xtask`, with no workspace edges |
+| `purity` | lower modules reach no upper module, I/O, socket, or clock |
+| `placeholder` | no placeholder bodies or lint suppression attributes |
+| `unsafe-boundary` | no unsafe token outside the empty allowlist |
+| `bin-name` | `skan` exists and cannot collide with lib target `scankit` |
+| strict Clippy | parser panic/arithmetic and API quality lints are warnings-as-errors |
 
-## What lives where
+## Permanent non-goals
 
-- **Grammar lives in the protocol cores.** If XML, SOAP, or a datagram layout is
-  parsed or rendered outside `scankit-escl`/`scankit-wsd`, it is in the wrong crate.
-- **Time lives in the pumps.** The cores cannot name a clock (`just purity`), so every
-  retry, timeout, and polling decision is a backend concern by construction.
-- **Sockets live in the leaves.** `scankit-http` for TCP/TLS, `scankit-discover` for
-  UDP and mDNS. Two crates touch the network; eleven do not.
-- **Policy lives in the facade.** Which backend drives a device that offers both
-  protocols, and what a one-call scan does, is composition — not something a protocol
-  core may decide.
+SANE compatibility, a C ABI, image decoding, PDF assembly, public driver injection,
+USB legacy drivers, vendor-proprietary protocols, and exposing transport dependencies are outside the architecture.
+Supporting a new wire protocol is an internal change unless it requires new scanner-domain semantics.

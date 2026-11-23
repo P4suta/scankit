@@ -39,27 +39,21 @@ CI. If it fails, fix the cause rather than narrowing the gate.
   **`doc-valid-idents` must keep `".."` as its last entry** — without it the list
   replaces Clippy's defaults instead of extending them.
 
-- **The dependency graph is frozen.** Every inter-crate edge must be an arrow the
-  ALLOWED matrix in `xtask/src/deps.rs` carries, and the matrix itself is transitively
-  closed and self-tested. Wanting a new edge means wanting an architecture change:
-  amend the ADR that froze the graph in the same commit
-  ([ADR 0003](docs/adr/0003-sans-io-protocol-cores.md), ARCHITECTURE.md).
+- **There is one product package.** `scan-kit` contains every implementation layer;
+  `xtask` is repository tooling.
+  `just deps` rejects another workspace package or an edge between the two.
+  A new crate is a publication and SemVer decision, not an organizational convenience ([ADR 0016](docs/adr/0016-one-product-crate.md)).
 
-- **The protocol cores stay sans-I/O.** `scankit-core`, `scankit-escl`, `scankit-wsd`,
-  and `scankit-backend-virtual` must not gain a socket, a clock read, a thread, or a
-  third-party dependency beyond the stated `quick-xml` allowance. `just purity`
-  enforces it, including over dev-dependencies. This bites the first time somebody
-  reaches for `proptest` inside a core; the test belongs in a crate above, and that is
-  the cost of a gate that cannot be talked around.
+- **Private modules carry the architecture.** `model`, `error`, `wire`, and `protocol` may not reach `api`, `driver`, or `transport`; protocol code may not name I/O,
+  sockets, threads, or clocks.
+  `just purity` checks those upward edges.
+  Put XML and SOAP interpretation in `protocol`, HTTP/TLS/mDNS in `transport`, their combination in `driver`, and caller policy in `api`.
 
-  A consequence worth knowing before it surprises you: **`scankit-core` cannot use
-  `scankit-testkit`, even in tests.** The testkit may depend on the vocabulary, so the
-  reverse dev-edge would state the architecture backwards; the `deps` gate (rule R3)
-  refuses it. Core's own tests use `std` alone.
+- **The root is a curated SemVer boundary.** Do not write `pub mod`, expose transport dependencies, or add public traits/features for an internal extension point.
+  Re-export a new domain name from `lib.rs` only after it has earned permanent support;
+  `unreachable_pub = "deny"` catches accidental public implementation items.
 
-- **Time belongs to the pumps.** A retry loop, a timeout, or a polling interval written
-  in a protocol core will fail `just purity` — express it as state and data, and let
-  the backend own the clock.
+- **Time belongs above protocols.** A retry loop, timeout, or polling interval written in protocol code fails `just purity`; render state/calls there and let transport or driver policy own the clock.
 
 - **No unsafe.** The allowlist in `xtask/src/unsafe_boundary.rs` is empty, and an entry
   requires an ADR, a `// SAFETY:` comment on every block, and no `unsafe fn`. The
